@@ -6,9 +6,14 @@
 #             Carbon Tax, Biodiversity Conservation, Energy Efficiency
 ###
 
+
+
+
 # Import necessary libraries
 from transformers import pipeline
 import csv  # Import the CSV module
+
+print("during")
 
 # Load the zero-shot classification model
 classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
@@ -33,14 +38,15 @@ def load_data(file_path):
 
 
 def assign_topic_scores(data, output_csv):
-    with open(output_csv, "w", newline="") as file:
-        writer = csv.writer(file)
-        writer.writerow(["policy_id", "country_iso", "policy_description", "start_date"] + topics)
+    with open(output_csv, "a", newline="") as file:
+        writer = csv.writer(file, delimiter=';')
 
         for row in data:
             policy_id, country_iso, start_date, policy_description = row
-            topic_scores = classifier(policy_description, topics)["scores"]
-            writer.writerow([policy_id, country_iso, policy_description, start_date] + topic_scores)
+            if policy_id not in output_csv:
+                topic_scores = classifier(policy_description, topics)["scores"]
+                writer.writerow([policy_id, country_iso, policy_description, start_date] + topic_scores)
+            else: continue
     print("here")
 
     
