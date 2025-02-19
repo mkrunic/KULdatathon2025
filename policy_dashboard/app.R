@@ -80,9 +80,10 @@ ui <- fluidPage(
           plotlyOutput("worldMap")  # Add source argument
         ),
         column(4,  # Right panel for displaying information
-          wellPanel(
+          wellPanel(style = "height: 575px;",  # Set a specific height for the panel
             h4("Country Information"),
-            plotlyOutput("countryInfo", height = "250px")  # Output for country information with maximum height of 250px
+            plotlyOutput("countryInfo", height = "250px"),  # Output for country information with maximum height of 250px
+            textOutput("coutrySummary")  # Add text output for country summary
           )
         )
       )
@@ -100,7 +101,7 @@ ui <- fluidPage(
       fluidRow(
         column(12,  # Keep the width of the map column
           style = "padding-left: 0;",
-          plotlyOutput("stats_map")
+          plotlyOutput("stats_map", height = "600px")  # Set a specific height for the map
         )
       )
       ),
@@ -175,6 +176,15 @@ server <- function(input, output, session) {
                  plot_bgcolor = '#f5f5f5')
 
         h  # Return the plotly object
+      })
+      
+      output$coutrySummary <- renderText({
+        # load country summary data
+        country_summary <- read.csv("data/concatenated_summaries_per_country.csv", header = TRUE, sep = ',')
+        # filter for selected country
+        country_summary <- country_summary[country_summary$country_iso == country_code, ]
+        # return the summary
+        paste("Climate Policy Summary:", country_summary$policy_summary)
       })
     }
   })
