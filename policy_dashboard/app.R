@@ -77,7 +77,7 @@ ui <- fluidPage(
       fluidRow(
         column(8,  # Keep the width of the map column
           style = "padding-left: 0;",  # Remove left padding
-          plotlyOutput("worldMap")
+          plotlyOutput("worldMap")  # Add source argument
         ),
         column(4,  # Right panel for displaying information
           wellPanel(
@@ -98,14 +98,9 @@ ui <- fluidPage(
       )
       ,
       fluidRow(
-        column(8,  # Keep the width of the map column
+        column(12,  # Keep the width of the map column
           style = "padding-left: 0;",
-        ),
-        column(4,  # Right panel for displaying information
-          wellPanel(
-            h4("Environmental Statistics"),
-            
-          )
+          plotlyOutput("stats_map")
         )
       )
       ),
@@ -141,7 +136,8 @@ server <- function(input, output, session) {
                   color = ~get(selected_topic), 
                   colors = "Blues", 
                   colorbar = list(title = "Topic Score"),
-                  hoverinfo = "text") %>%
+                  hoverinfo = "text",
+                  source = "policies_source") %>%
       layout(title = paste("World Map -", selected_topic),
              geo = list(showframe = FALSE, 
                         projection = list(type = 'equal earth')))
@@ -154,9 +150,9 @@ server <- function(input, output, session) {
   outputOptions(output, "worldMap", suspendWhenHidden = FALSE)
 
   # Observe hover events to update the country information panel
-  observeEvent(event_data("plotly_hover"), {
-    hover_data <- event_data("plotly_hover")
-    if (!is.null(hover_data) && hover_data$curveNumber == 0) {  # Check if the event is from the first curve (the map)
+  observeEvent(event_data("plotly_hover", source = "policies_source"), {
+    hover_data <- event_data("plotly_hover", source = "policies_source")
+    if (!is.null(hover_data) && hover_data$curveNumber == 0 ) {  # Check if the event is from the first curve (the map)
       country_code <- hover_data$customdata[1]  # Get the country code from the hover data
       country_info <- topic_scores %>%
         filter(country_iso == country_code)  # Filter the data for the selected country
@@ -182,7 +178,123 @@ server <- function(input, output, session) {
       })
     }
   })
-  
+
+  output$stats_map <- renderPlotly({
+    selected_stat <- input$statsSelect  # Use the selected topic from the dropdown
+    
+    # create plot according to selected stat
+    if (selected_stat == "Yearly Temperature Average") {
+
+      # Load temperature data
+      yearly_avg <- read.csv("data/avg_temp_plotting.csv", header = TRUE, sep = ',')
+      
+      # Determine the min and max values for the color scale
+      zmin <- min(yearly_avg$AverageTemperature, na.rm = TRUE)
+      zmax <- max(yearly_avg$AverageTemperature, na.rm = TRUE)
+
+      # plot temperature data
+      fig <- plot_ly(
+        data = yearly_avg,
+        locations = ~Country, 
+        locationmode = "country names",
+        frame = ~Year,  # Animation frame
+        z = ~AverageTemperature,
+        colorscale = "RdYlBu",
+        type = "choropleth",
+        hoverinfo = "text",
+        text = ~paste0("Country: ", Country, "<br>Temperature: ", round(AverageTemperature, 2)),
+        zmin = zmin,  # Set the minimum value for the color scale
+        zmax = zmax   # Set the maximum value for the color scale
+      )
+
+      # Customize layout
+      fig <- fig %>% layout(
+        title = "Average Temperature by Country (2000-2025)",
+        geo = list(
+          showframe = FALSE,
+          showcoastlines = TRUE,
+          projection = list(type = "equirectangular")
+        )
+      )
+
+      # Adjust animation settings
+      fig <- fig %>%
+        animation_opts(frame = 1000, transition = 500)
+
+      event_register(fig, 'plotly_hover')
+      # Display the figure
+      fig
+
+    } else if (selected_stat == "CO2") {
+      # Load CO2 data
+      co2_melted <- read.csv("data/co2_plotting.csv", header = TRUE, sep = ',')
+
+      # Determine the min and max values for the color scale
+      zmin <- min(co2_melted$value, na.rm = TRUE)
+      zmax <- 25
+      
+      fig <- plot_ly(
+        data = co2_melted, 
+        type = "choropleth",
+        locations = ~Country_Name,  # Ensure column name is referenced correctly
+        locationmode = "country names",
+        z = ~value,
+        frame = ~Year,  # Animation frame
+        colorscale = "RdBu",  # Reverse Blue-Red for emission intensity
+        colorbar = list(title = "CO₂ Emissions"),
+        hoverinfo = "text",
+        text = ~paste("Country:", Country_Name, "<br>Year:", Year, "<br>CO₂ Emission:", round(value, 2)),
+        zmin = zmin,  # Set the minimum value for the color scale
+        zmax = zmax   # Set the maximum value for the color scale
+      ) %>%
+        layout(
+          title = "CO₂ Emission by Countries by Year",
+          geo = list(
+            showframe = FALSE,
+            showcoastlines = TRUE,
+            projection = list(type = "equirectangular")
+          ),
+          coloraxis = list(cmin = 0, cmax = 200)  # Reverse scale range
+        )
+
+      # Display the plot
+      fig
+    } else if (selected_stat == "Renewable Energy") {
+      # Load renewable energy data
+      renewable_energy <- read.csv("data/renewables_plotting.csv", header = TRUE, sep = ',')
+      
+      # Determine the max value for the color scale
+      max_value <- max(renewable_energy$Proportion_Renewables, na.rm = TRUE)
+
+      fig <- plot_ly(
+        data = renewable_energy, 
+        type = "choropleth",
+        locations = ~Country,  # Ensure column name matches exactly
+        locationmode = "country names",
+        z = ~Proportion_Renewables,
+        frame = ~Year,  # Animation frame
+        colorscale = "Greens",  # Use green color scale for renewable energy
+        reversescale = TRUE,  # Reverse the color scale
+        colorbar = list(title = "Renewable Energy (%)"),
+        hoverinfo = "text",
+        text = ~paste("Country:", Country, "<br>Year:", Year, 
+                      "<br>Renewable Energy %:", round(Proportion_Renewables, 2))
+      ) %>%
+        layout(
+          title = "Average Proportion of Energy from Renewables by Country Over Time",
+          geo = list(
+            showframe = FALSE,
+            showcoastlines = TRUE,
+            projection = list(type = "equirectangular")
+          ),
+          coloraxis = list(cmin = 0, cmax = max_value)  # Set color range
+        )
+
+      # Display the plot
+      fig
+    }
+  }
+  )
 }
 
 shinyApp(ui = ui, server = server)
