@@ -77,7 +77,7 @@ ui <- fluidPage(
     column(4,  # Right panel for displaying information
       wellPanel(
         h4("Country Information"),
-        plotOutput("countryInfo", height = "250px")  # Output for country information with maximum height of 250px
+        plotlyOutput("countryInfo", height = "250px")  # Output for country information with maximum height of 250px
       )
     )
   )
@@ -113,7 +113,7 @@ server <- function(input, output) {
                   hoverinfo = "text") %>%
       layout(title = paste("World Map -", selected_topic),
              geo = list(showframe = FALSE, 
-                        projection = list(type = 'mercator')))
+                        projection = list(type = 'equal earth')))
 
     # Register the hover event
     event_register(p, 'plotly_hover')
@@ -124,26 +124,29 @@ server <- function(input, output) {
   # Observe hover events to update the country information panel
   observeEvent(event_data("plotly_hover"), {
     hover_data <- event_data("plotly_hover")
-    if (!is.null(hover_data)) {
+    if (!is.null(hover_data) && hover_data$curveNumber == 0) {  # Check if the event is from the first curve (the map)
       country_code <- hover_data$customdata[1]  # Get the country code from the hover data
       country_info <- topic_scores %>%
         filter(country_iso == country_code)  # Filter the data for the selected country
       
-      output$countryInfo <- renderPlot({
+      output$countryInfo <- renderPlotly({  # Change renderPlot to renderPlotly
         # Filter for country data
         normalized_scores <- topic_scores %>%
           filter(country_iso == country_code) %>% # pivot table, one column for topic names and 1 for values
           pivot_longer(cols = -country_iso, names_to = "topic_names", values_to = "values")
-        # Rename the topics with only their initials
-        normalized_scores$topic_names <- gsub("(.).*", "\\1", normalized_scores$topic_names)
+        # Rename the topics with only their initials (split by '.' and take the first letters)
+        normalized_scores$topic_names <- sapply(strsplit(normalized_scores$topic_names, "\\."), function(x) paste0(substr(x, 1, 1), collapse = ""))
         # Plotting the histogram
-        h <- ggplot(normalized_scores, aes(x = topic_names, y = values)) +
-          geom_bar(stat = "identity") + 
-          labs(title = "Relative Focus for Each Topic", x = "Topic", y = "Score", ) +
+        h <- plot_ly(normalized_scores, x = ~topic_names, y = ~values, type = 'bar', 
+                      marker = list(color = 'rgb(12,48,108)')) %>%
+          layout(title = "Relative Focus for Each Topic",
+                 font = list(color = '#333', size = 10, family = 'Helvetica'),
+                 xaxis = list(title = "Topic"), 
+                 yaxis = list(title = "Score"),
+                 paper_bgcolor = '#f5f5f5',
+                 plot_bgcolor = '#f5f5f5')
 
-          theme_minimal()
-
-        h
+        h  # Return the plotly object
       })
     }
   })
