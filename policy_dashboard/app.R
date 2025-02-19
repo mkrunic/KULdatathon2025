@@ -58,32 +58,63 @@ topic_scores <- topic_scores %>%
 # UI
 ui <- fluidPage(
   titlePanel("World Map - Environmental Policy Focus"),
-  fluidRow(
-    column(4,  # New column for the dropdown menu
-      selectInput("topicSelect", "Select Topic:", 
-                  choices = c("Renewable.Energy", "Carbon.Emissions", "Carbon.Capture", 
-                              "Waste.Management", "Sustainable.Agriculture", 
-                              "Water.Conservation", "Public.Awareness.Initiatives", 
-                              "Carbon.Tax", "Biodiversity.Conservation", 
-                              "Energy.Efficiency"),
-                  selected = "Renewable.Energy")  # Default selection
-    ))
-  ,
-  fluidRow(
-    column(8,  # Keep the width of the map column
-      style = "padding-left: 0;",  # Remove left padding
-      plotlyOutput("worldMap")
-    ),
-    column(4,  # Right panel for displaying information
-      wellPanel(
-        h4("Country Information"),
-        plotlyOutput("countryInfo", height = "250px")  # Output for country information with maximum height of 250px
+  tabsetPanel(
+    id = "main_tabs",  # Give the tabset an ID
+  tabPanel("Policies Map", value = "policy_tab",
+      fluidRow(
+        column(4,  # New column for the dropdown menu
+          style = list(marginTop = "10px"),  # Add margin to the top
+          selectInput("topicSelect", "Select Topic:", 
+                      choices = c("Renewable.Energy", "Carbon.Emissions", "Carbon.Capture", 
+                                  "Waste.Management", "Sustainable.Agriculture", 
+                                  "Water.Conservation", "Public.Awareness.Initiatives", 
+                                  "Carbon.Tax", "Biodiversity.Conservation", 
+                                  "Energy.Efficiency"),
+                      selected = "Renewable.Energy")  # Default selection
+        )
       )
+      ,
+      fluidRow(
+        column(8,  # Keep the width of the map column
+          style = "padding-left: 0;",  # Remove left padding
+          plotlyOutput("worldMap")
+        ),
+        column(4,  # Right panel for displaying information
+          wellPanel(
+            h4("Country Information"),
+            plotlyOutput("countryInfo", height = "250px")  # Output for country information with maximum height of 250px
+          )
+        )
+      )
+    ),
+    tabPanel("Environmental Statistics", value = "stats_tab",
+      fluidRow(
+        column(4,  # New column for the dropdown menu
+          style = list(marginTop = "10px"),  # Add margin to the top
+          selectInput("statsSelect", "Select Topic:", 
+                      choices = c("Renewable Energy", "Yearly Temperature Average", "CO2"),
+                      selected = "Yearly Temperature Average")  # Default selection
+        )
+      )
+      ,
+      fluidRow(
+        column(8,  # Keep the width of the map column
+          style = "padding-left: 0;",
+        ),
+        column(4,  # Right panel for displaying information
+          wellPanel(
+            h4("Environmental Statistics"),
+            
+          )
+        )
+      )
+      ),
+      selected = "policy_tab"
     )
   )
-)
 
-server <- function(input, output) {
+
+server <- function(input, output, session) {
   output$worldMap <- renderPlotly({
     selected_topic <- input$topicSelect  # Use the selected topic from the dropdown
     # Filter data based on selected topic
@@ -118,8 +149,9 @@ server <- function(input, output) {
     # Register the hover event
     event_register(p, 'plotly_hover')
     
-    p  # Return the plotly object
+    return(p)
   })
+  outputOptions(output, "worldMap", suspendWhenHidden = FALSE)
 
   # Observe hover events to update the country information panel
   observeEvent(event_data("plotly_hover"), {
@@ -138,7 +170,7 @@ server <- function(input, output) {
         normalized_scores$topic_names <- sapply(strsplit(normalized_scores$topic_names, "\\."), function(x) paste0(substr(x, 1, 1), collapse = ""))
         # Plotting the histogram
         h <- plot_ly(normalized_scores, x = ~topic_names, y = ~values, type = 'bar', 
-                      marker = list(color = 'rgb(12,48,108)')) %>%
+                      marker = list(color = 'rgb(12,48,108)'), hoverinfo = 'none') %>%
           layout(title = "Relative Focus for Each Topic",
                  font = list(color = '#333', size = 10, family = 'Helvetica'),
                  xaxis = list(title = "Topic"), 
@@ -150,6 +182,7 @@ server <- function(input, output) {
       })
     }
   })
+  
 }
 
 shinyApp(ui = ui, server = server)
