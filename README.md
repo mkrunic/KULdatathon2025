@@ -1,4 +1,4 @@
-## 🏗️ Project Structure
+## Project Structure
 
 ### **Part 1: Dashboard for Interactive Data Exploration**
 - **Policy Summarization**: Uses `facebook/bart-large-cnn` to summarize policies.
@@ -23,7 +23,7 @@
 5. **Optimized Policy Decision-Making**: AI finds solutions that maximize both national and global policy efficacy.
 
 
-## 🎯 Future Development
+## Future Development
 - **Advanced TinyTroop Capabilities**: Improve AI reasoning for deeper policy analysis.
 - **Expanded Policy Dataset**: Incorporate real-time updates from global climate reports.
 - **Decision Impact Prediction**: Model how policies influence real-world climate metrics.
