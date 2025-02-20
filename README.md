@@ -24,7 +24,7 @@
 
 
 ## 🎯 Future Development
-🔹 **Advanced TinyTroop Capabilities**: Improve AI reasoning for deeper policy analysis.
-🔹 **Expanded Policy Dataset**: Incorporate real-time updates from global climate reports.
-🔹 **Decision Impact Prediction**: Model how policies influence real-world climate metrics.
-🔹 **Enhanced Conference Simulations**: Train AI agents to negotiate optimal climate agreements.
+**Advanced TinyTroop Capabilities**: Improve AI reasoning for deeper policy analysis.
+**Expanded Policy Dataset**: Incorporate real-time updates from global climate reports.
+**Decision Impact Prediction**: Model how policies influence real-world climate metrics.
+**Enhanced Conference Simulations**: Train AI agents to negotiate optimal climate agreements.
