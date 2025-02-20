@@ -58,7 +58,7 @@ topic_scores <- topic_scores %>%
   tsne_data <- read.csv("data/embedding.csv", header = TRUE, sep = ',')
   continent_levels <- sort(unique(tsne_data$continent))
   # Use Pastel1 for up to 9 categories; expand if you have >9 continents
-  continent_pal <- brewer.pal(n = max(9, length(continent_levels)), name = "Pastel1")[1:length(continent_levels)]
+  continent_pal <- brewer.pal(n = max(9, length(continent_levels)), name = "Dark2")[1:length(continent_levels)]
   names(continent_pal) <- continent_levels
   
 # UI
