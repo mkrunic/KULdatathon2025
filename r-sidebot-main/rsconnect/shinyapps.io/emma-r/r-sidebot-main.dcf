@@ -1,0 +1,10 @@
+name: r-sidebot-main
+title:
+username: emma-r
+account: emma-r
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 14050311
+bundleId: 9829663
+url: https://emma-r.shinyapps.io/r-sidebot-main/
+version: 1

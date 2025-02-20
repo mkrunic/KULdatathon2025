@@ -1,4 +1,4 @@
-library(shiny)
+# library(shiny)
 library(bslib)
 library(promises)
 library(fastmap)
@@ -283,7 +283,7 @@ server <- function(input, output, session) {
   })
   
   observeEvent(input$interpret_scatter, {
-    explain_plot(chat, scatterplot2(), model = openai_model, .ctx = ctx)
+    explain_plot(chat, scatterplot(), model = openai_model, .ctx = ctx)
   })
   
   

@@ -13,7 +13,8 @@ plot_to_img_content.plotly <- function(p) {
   # Create a temporary file
   tmp <- tempfile(fileext = ".png")
   on.exit(unlink(tmp))
-
+  
+  tmp <- gsub("\\\\", "/", tmp)
   # Save the plot as an image
   save_image(p, tmp, width = 800, height = 600)
   ellmer::content_image_file(tmp, resize = "high")

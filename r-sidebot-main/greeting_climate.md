@@ -4,4 +4,4 @@ You can use this sidebar to filter and sort the data based on the columns availa
 2. Sorting: "Show all countries sorted by carbon emission policy scores."
 3. Answer questions about the data: "What country has the highest renewable energy policy score?"
 
-You can also say "Reset" to clear the current filter/sort, or "Help" for more usage tips.
+You can also say "Show me the original table" to clear the current filter/sort, or "Help" for more usage tips.
