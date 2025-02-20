@@ -128,7 +128,7 @@ ui <- fluidPage(
             style = list(marginTop = "10px"),  # Add margin to the top
             selectInput(
               "country", "Select Country:",
-              choices = sort(unique(topic_scores$country_iso)),
+              choices = sort(unique(tsne_data$country_iso)),
               selected = NULL,
               multiple = TRUE
             )
@@ -344,7 +344,23 @@ server <- function(input, output, session) {
 
   # Add the server logic for the t-SNE plot
   output$tsnePlot <- renderPlotly({
-    df <- tsne_data  # Use the t-SNE data
+    # Reactive data filter: show only selected continents + countries
+    filtered_data <- reactive({
+      df <- tsne_data
+      
+      # Filter by chosen continents (if any)
+      if (length(input$continent) > 0) {
+        df <- df %>% filter(continent %in% input$continent)
+      }
+      # Filter by chosen countries (if any)
+      if (length(input$country) > 0) {
+        df <- df %>% filter(country_iso %in% input$country)
+      }
+      
+      df
+    })
+    
+    df <- filtered_data()  # Use the t-SNE data
     plot_ly(
       data = df,
       x = ~t.SNE.1,
