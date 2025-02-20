@@ -1,3 +1,6 @@
+# KUL/LSTAT Datathon 2025 - Biowinf team
+### Sofya Lukashevich, Maria Krunic, Emma Rousseau
+
 ## Project Structure
 
 ### **Part 1: Dashboard for Interactive Data Exploration**
