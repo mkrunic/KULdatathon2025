@@ -5,6 +5,6 @@ account: emma-r
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 14042201
-bundleId:
+bundleId: 9829565
 url: https://emma-r.shinyapps.io/policy_dashboard/
 version: 1

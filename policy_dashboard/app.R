@@ -56,9 +56,9 @@ topic_scores <- topic_scores %>%
   select(-total_score)  # Remove the total_score column if not needed
 
   tsne_data <- read.csv("data/embedding.csv", header = TRUE, sep = ',')
-  continent_levels <- sort(unique(tsne_data$continent))
-  # Use Pastel1 for up to 9 categories; expand if you have >9 continents
-  continent_pal <- brewer.pal(n = max(9, length(continent_levels)), name = "Dark2")[1:length(continent_levels)]
+  continent_levels <- c("AF", "AS", "EU", "OC", "SA", "NAM")
+  continent_pal <- brewer.pal(n = max(length(continent_levels)), name = "Dark2")[1:length(continent_levels)]
+  print(continent_pal)
   names(continent_pal) <- continent_levels
   
 # UI
@@ -120,7 +120,7 @@ ui <- fluidPage(
             selectInput(
               "continent", "Select Continent:",
               choices = continent_levels,
-              selected = continent_levels[1],  # Default to first continent
+              selected = continent_levels,
               multiple = TRUE
             )
           ),
