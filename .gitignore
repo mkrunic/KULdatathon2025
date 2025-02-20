@@ -1,3 +1,8 @@
 data/*
 !app/data
 datathon_env/*
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+.Renviron
