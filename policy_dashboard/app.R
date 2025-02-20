@@ -12,6 +12,7 @@ library(ggplot2)
 library(maps)
 library(plotly)
 library(tidyr)
+library(RColorBrewer)
 
 
 topic_scores <- read.csv("data/topic_scores_output.csv", header = TRUE, sep = ';')
@@ -54,13 +55,18 @@ topic_scores <- topic_scores %>%
   ) %>%
   select(-total_score)  # Remove the total_score column if not needed
 
-
+  tsne_data <- read.csv("data/embedding.csv", header = TRUE, sep = ',')
+  continent_levels <- sort(unique(tsne_data$continent))
+  # Use Pastel1 for up to 9 categories; expand if you have >9 continents
+  continent_pal <- brewer.pal(n = max(9, length(continent_levels)), name = "Pastel1")[1:length(continent_levels)]
+  names(continent_pal) <- continent_levels
+  
 # UI
 ui <- fluidPage(
   titlePanel("World Map - Environmental Policy Focus"),
   tabsetPanel(
     id = "main_tabs",  # Give the tabset an ID
-  tabPanel("Policies Map", value = "policy_tab",
+    tabPanel("Policies Map", value = "policy_tab",
       fluidRow(
         column(4,  # New column for the dropdown menu
           style = list(marginTop = "10px"),  # Add margin to the top
@@ -104,10 +110,40 @@ ui <- fluidPage(
           plotlyOutput("stats_map", height = "600px")  # Set a specific height for the map
         )
       )
+    ),
+    tabPanel("Analysis", value = "analysis_tab",
+      fluidRow(
+        fluidRow(
+          style = "padding-left: 15px;",
+          column(3,  # New column for the dropdown menu
+            style = list(marginTop = "10px"),  # Add margin to the top
+            selectInput(
+              "continent", "Select Continent:",
+              choices = continent_levels,
+              selected = continent_levels[1],  # Default to first continent
+              multiple = TRUE
+            )
+          ),
+          column(3,  # New column for the dropdown menu
+            style = list(marginTop = "10px"),  # Add margin to the top
+            selectInput(
+              "country", "Select Country:",
+              choices = sort(unique(topic_scores$country_iso)),
+              selected = NULL,
+              multiple = TRUE
+            )
+          )
+        )
       ),
-      selected = "policy_tab"
-    )
+      fluidRow(
+        column(12,
+          plotlyOutput("tsnePlot")  # Output for the t-SNE plot
+        )
+      )
+    ),
+    selected = "policy_tab"
   )
+)
 
 
 server <- function(input, output, session) {
@@ -219,7 +255,7 @@ server <- function(input, output, session) {
 
       # Customize layout
       fig <- fig %>% layout(
-        title = "Average Temperature by Country (2000-2025)",
+        title = ~paste0("Average Temperature by Country (2000-", max(yearly_avg$Year), ")"),
         geo = list(
           showframe = FALSE,
           showcoastlines = TRUE,
@@ -305,6 +341,35 @@ server <- function(input, output, session) {
     }
   }
   )
+
+  # Add the server logic for the t-SNE plot
+  output$tsnePlot <- renderPlotly({
+    df <- tsne_data  # Use the t-SNE data
+    plot_ly(
+      data = df,
+      x = ~t.SNE.1,
+      y = ~t.SNE.2,
+      color = ~continent,
+      colors = continent_pal,
+      symbol = I("circle"),
+      text = ~paste(
+        "Country:", country_iso,
+        "<br>Policy Name:", policy_name,
+        "<br>Summary:", policy_summary_wrapped
+      ),
+      hoverinfo = "text",
+      type = "scatter",
+      mode = "markers"
+    ) %>%
+      layout(
+        title = "Policy Description Embeddings",
+        plot_bgcolor = "white",
+        paper_bgcolor = "white",
+        xaxis = list(title = "t-SNE 1", zeroline = FALSE, showgrid = FALSE),
+        yaxis = list(title = "t-SNE 2", zeroline = FALSE, showgrid = FALSE),
+        legend = list(title = list(text = "Continent & Country"))
+      )
+  })
 }
 
 shinyApp(ui = ui, server = server)
