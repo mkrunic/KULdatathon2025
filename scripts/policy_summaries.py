@@ -34,7 +34,7 @@ for country in countries:
         if isinstance(policies[country][topic], list) and len(policies[country][topic]) > 0:
             policies_concat = " ".join(map(str, policies[country][topic]))
             max_len = min(500, len(policies_concat.split(" ")))
-            min_len = max(50, len(policies_concat.split(" ")))
+            min_len = min(50, len(policies_concat.split(" ")))
             summary = summarizer(policies_concat, max_length=max_len, min_length=min_len, do_sample=False)
             summaries.append({
                 'country_iso': country,
