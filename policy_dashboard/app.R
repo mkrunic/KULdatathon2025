@@ -15,45 +15,15 @@ library(tidyr)
 library(RColorBrewer)
 
 
-topic_scores <- read.csv("data/topic_scores_output.csv", header = TRUE, sep = ';')
+topic_scores <- read.csv("data/climate_policies_count.csv", header = TRUE, sep = ';')
 
-topic_scores <- topic_scores[, c("country_iso", "Renewable.Energy", "Carbon.Emissions",
-                                 "Carbon.Capture", "Waste.Management", "Sustainable.Agriculture",
-                                 "Water.Conservation", "Public.Awareness.Initiatives", "Carbon.Tax",
-                                 "Biodiversity.Conservation", "Energy.Efficiency")]
+topic_scores <- topic_scores[, c("Agriculture, Forestry & Land Use",
+                                 "Buildings & Appliances",
+                                 "Energy Production & Supply",
+                                 "Technologies and Solutions",
+                                 "Transport", 
+                                 "Atmospheric Gases")]
 
-# add up scores for each country
-topic_scores <- topic_scores %>%
-  group_by(country_iso) %>%
-  summarise(Renewable.Energy = sum(Renewable.Energy, na.rm = TRUE) / n(),
-    Carbon.Emissions = sum(Carbon.Emissions, na.rm = TRUE) / n(),
-    Carbon.Capture = sum(Carbon.Capture, na.rm = TRUE) / n(),
-    Waste.Management = sum(Waste.Management, na.rm = TRUE) / n(),
-    Sustainable.Agriculture = sum(Sustainable.Agriculture, na.rm = TRUE) / n(),
-    Water.Conservation = sum(Water.Conservation, na.rm = TRUE) / n(),
-    Public.Awareness.Initiatives = sum(Public.Awareness.Initiatives, na.rm = TRUE) / n(),
-    Carbon.Tax = sum(Carbon.Tax, na.rm = TRUE) / n(),
-    Biodiversity.Conservation = sum(Biodiversity.Conservation, na.rm = TRUE) / n(),
-    Energy.Efficiency = sum(Energy.Efficiency, na.rm = TRUE) / n()
-  ) %>%
-  mutate(
-    total_score = Renewable.Energy + Carbon.Emissions + Carbon.Capture + 
-                  Waste.Management + Sustainable.Agriculture + 
-                  Water.Conservation + Public.Awareness.Initiatives + 
-                  Carbon.Tax + Biodiversity.Conservation + 
-                  Energy.Efficiency,
-    Renewable.Energy = Renewable.Energy / total_score,
-    Carbon.Emissions = Carbon.Emissions / total_score,
-    Carbon.Capture = Carbon.Capture / total_score,
-    Waste.Management = Waste.Management / total_score,
-    Sustainable.Agriculture = Sustainable.Agriculture / total_score,
-    Water.Conservation = Water.Conservation / total_score,
-    Public.Awareness.Initiatives = Public.Awareness.Initiatives / total_score,
-    Carbon.Tax = Carbon.Tax / total_score,
-    Biodiversity.Conservation = Biodiversity.Conservation / total_score,
-    Energy.Efficiency = Energy.Efficiency / total_score
-  ) %>%
-  select(-total_score)  # Remove the total_score column if not needed
 
   tsne_data <- read.csv("data/embedding.csv", header = TRUE, sep = ',')
   continent_levels <- c("AF", "AS", "EU", "OC", "SA", "NAM")
@@ -71,12 +41,13 @@ ui <- fluidPage(
         column(4,  # New column for the dropdown menu
           style = list(marginTop = "10px"),  # Add margin to the top
           selectInput("topicSelect", "Select Topic:", 
-                      choices = c("Renewable.Energy", "Carbon.Emissions", "Carbon.Capture", 
-                                  "Waste.Management", "Sustainable.Agriculture", 
-                                  "Water.Conservation", "Public.Awareness.Initiatives", 
-                                  "Carbon.Tax", "Biodiversity.Conservation", 
-                                  "Energy.Efficiency"),
-                      selected = "Renewable.Energy")  # Default selection
+                      choices = c("Agriculture, Forestry & Land Use",
+                                 "Buildings & Appliances",
+                                 "Energy Production & Supply",
+                                 "Technologies and Solutions",
+                                 "Transport", 
+                                 "Atmospheric Gases"),
+                      selected = "Energy Production & Supply")  # Default selection
         )
       )
       ,
@@ -216,7 +187,7 @@ server <- function(input, output, session) {
       
       output$coutrySummary <- renderText({
         # load country summary data
-        country_summary <- read.csv("data/concatenated_summaries_per_country.csv", header = TRUE, sep = ',')
+        country_summary <- read.csv("data/policy_summaries.csv", header = TRUE, sep = ',')
         # filter for selected country
         country_summary <- country_summary[country_summary$country_iso == country_code, ]
         # return the summary
