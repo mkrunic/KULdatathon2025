@@ -10,7 +10,7 @@
 import pandas as pd
 
 # Load the data
-df = pd.read_csv('data/Climate Policies/climate_policies.csv', sep=';')
+df = pd.read_csv('climate_change/Climate Policies/climate_policies.csv', sep=';')
 
 # if policy_id is not a number, drop the row
 df = df[pd.to_numeric(df['policy_id'], errors='coerce').notnull()]
@@ -22,8 +22,11 @@ df = df.drop_duplicates(subset='policy_id')
 # if country_iso is not a string of length 3, drop the row
 df = df[df['country_iso'].str.len() == 3]
 
+# if country_iso is a number, drop the row
+df = df[~df['country_iso'].str.isnumeric()]
+
 # remove columns that are empty
 df = df.dropna(axis=1, how='all')
 
 # write to new csv file
-df.to_csv('data/Climate Policies/climate_policies_cleaned.csv', index=False)
+df.to_csv('policy_dashboard/data/climate_policies_cleaned.csv', index=False, sep=';')
