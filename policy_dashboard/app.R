@@ -14,7 +14,7 @@ library(plotly)
 library(tidyr)
 library(RColorBrewer)
 
-option(shiny.trace = FALSE)
+options(shiny.trace = FALSE)
 
 
 topic_scores <- read.csv("data/climate_policies_counts.csv", header = TRUE, sep = ';')
@@ -31,7 +31,6 @@ topic_scores <- topic_scores %>% select(all_of((c("country_iso",
 tsne_data <- read.csv("data/embedding.csv", header = TRUE, sep = ',')
 continent_levels <- c("AF", "AS", "EU", "OC", "SA", "NAM")
 continent_pal <- brewer.pal(n = max(length(continent_levels)), name = "Dark2")[1:length(continent_levels)]
-print(continent_pal)
 names(continent_pal) <- continent_levels
 
 # UI
@@ -82,36 +81,6 @@ ui <- fluidPage(
         column(12,  # Keep the width of the map column
           style = "padding-left: 0;",
           plotlyOutput("stats_map", height = "600px")  # Set a specific height for the map
-        )
-      )
-    ),
-    tabPanel("Analysis", value = "analysis_tab",
-      fluidRow(
-        fluidRow(
-          style = "padding-left: 15px;",
-          column(3,  # New column for the dropdown menu
-            style = list(marginTop = "10px"),  # Add margin to the top
-            selectInput(
-              "continent", "Select Continent:",
-              choices = continent_levels,
-              selected = continent_levels,
-              multiple = TRUE
-            )
-          ),
-          column(3,  # New column for the dropdown menu
-            style = list(marginTop = "10px"),  # Add margin to the top
-            selectInput(
-              "country", "Select Country:",
-              choices = sort(unique(tsne_data$country_iso)),
-              selected = NULL,
-              multiple = TRUE
-            )
-          )
-        )
-      ),
-      fluidRow(
-        column(12,
-          plotlyOutput("tsnePlot")  # Output for the t-SNE plot
         )
       )
     ),
@@ -192,14 +161,13 @@ server <- function(input, output, session) {
         # load country summary data
         country_summary <- read.csv("data/policy_summaries.csv", header = TRUE, sep = ';')
         make.names(country_summary, unique = TRUE)
-        print(colnames(country_summary))
         selected_topic <- gsub("_normalized", "", make.names(input$topicSelect))
         # filter for selected country
         country_summary <- country_summary[country_summary$country_iso == country_code, ]
         # filter for selected topic
         country_summary <- country_summary[country_summary$topic == input$topicSelect, ]
         # return the summary
-        paste("Climate Policy Summary:", country_summary$summary)
+        paste(paste(input$topicSelect, "Policies Summary:"), country_summary$summary)
       })
     }
   })
@@ -320,51 +288,6 @@ server <- function(input, output, session) {
     }
   }
   )
-
-  # Add the server logic for the t-SNE plot
-  output$tsnePlot <- renderPlotly({
-    # Reactive data filter: show only selected continents + countries
-    filtered_data <- reactive({
-      df <- tsne_data
-      
-      # Filter by chosen continents (if any)
-      if (length(input$continent) > 0) {
-        df <- df %>% filter(continent %in% input$continent)
-      }
-      # Filter by chosen countries (if any)
-      if (length(input$country) > 0) {
-        df <- df %>% filter(country_iso %in% input$country)
-      }
-      
-      df
-    })
-    
-    df <- filtered_data()  # Use the t-SNE data
-    plot_ly(
-      data = df,
-      x = ~t.SNE.1,
-      y = ~t.SNE.2,
-      color = ~continent,
-      colors = continent_pal,
-      symbol = I("circle"),
-      text = ~paste(
-        "Country:", country_iso,
-        "<br>Policy Name:", policy_name,
-        "<br>Summary:", policy_summary_wrapped
-      ),
-      hoverinfo = "text",
-      type = "scatter",
-      mode = "markers"
-    ) %>%
-      layout(
-        title = "Policy Description Embeddings",
-        plot_bgcolor = "white",
-        paper_bgcolor = "white",
-        xaxis = list(title = "t-SNE 1", zeroline = FALSE, showgrid = FALSE),
-        yaxis = list(title = "t-SNE 2", zeroline = FALSE, showgrid = FALSE),
-        legend = list(title = list(text = "Continent & Country"))
-      )
-  })
 }
 
 shinyApp(ui = ui, server = server)
