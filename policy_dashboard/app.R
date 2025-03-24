@@ -25,12 +25,12 @@ topic_scores <- topic_scores[, c("Agriculture, Forestry & Land Use",
                                  "Atmospheric Gases")]
 
 
-  tsne_data <- read.csv("data/embedding.csv", header = TRUE, sep = ',')
-  continent_levels <- c("AF", "AS", "EU", "OC", "SA", "NAM")
-  continent_pal <- brewer.pal(n = max(length(continent_levels)), name = "Dark2")[1:length(continent_levels)]
-  print(continent_pal)
-  names(continent_pal) <- continent_levels
-  
+tsne_data <- read.csv("data/embedding.csv", header = TRUE, sep = ',')
+continent_levels <- c("AF", "AS", "EU", "OC", "SA", "NAM")
+continent_pal <- brewer.pal(n = max(length(continent_levels)), name = "Dark2")[1:length(continent_levels)]
+print(continent_pal)
+names(continent_pal) <- continent_levels
+
 # UI
 ui <- fluidPage(
   titlePanel("World Map - Environmental Policy Focus"),
@@ -190,8 +190,10 @@ server <- function(input, output, session) {
         country_summary <- read.csv("data/policy_summaries.csv", header = TRUE, sep = ',')
         # filter for selected country
         country_summary <- country_summary[country_summary$country_iso == country_code, ]
+        # filter for selected topic
+        country_summary <- country_summary[country_summary$topic == input$topicSelect, ]
         # return the summary
-        paste("Climate Policy Summary:", country_summary$policy_summary)
+        paste("Climate Policy Summary:", country_summary$summary)
       })
     }
   })
