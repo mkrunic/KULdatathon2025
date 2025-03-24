@@ -14,15 +14,18 @@ library(plotly)
 library(tidyr)
 library(RColorBrewer)
 
+option(shiny.trace = FALSE)
 
-topic_scores <- read.csv("data/climate_policies_count.csv", header = TRUE, sep = ';')
 
-topic_scores <- topic_scores[, c("Agriculture, Forestry & Land Use",
-                                 "Buildings & Appliances",
-                                 "Energy Production & Supply",
-                                 "Technologies and Solutions",
-                                 "Transport", 
-                                 "Atmospheric Gases")]
+topic_scores <- read.csv("data/climate_policies_counts.csv", header = TRUE, sep = ';')
+make.names(topic_scores, unique = TRUE)
+topic_scores <- topic_scores %>% select(all_of((c("country_iso",
+                                        "Agriculture..Forestry...Land.Use_normalized",
+                                        "Buildings...Appliances_normalized",
+                                        "Energy.Production...Supply_normalized",
+                                        "Technologies.and.Solutions_normalized",
+                                        "Transport_normalized", 
+                                        "Atmospheric.Gases_normalized"))))
 
 
 tsne_data <- read.csv("data/embedding.csv", header = TRUE, sep = ',')
@@ -119,10 +122,10 @@ ui <- fluidPage(
 
 server <- function(input, output, session) {
   output$worldMap <- renderPlotly({
-    selected_topic <- input$topicSelect  # Use the selected topic from the dropdown
+    selected_topic <- paste0(make.names(input$topicSelect), "_normalized") # Use the selected topic from the dropdown
     # Filter data based on selected topic
     filtered_data <- topic_scores %>%
-      select(country_iso, selected_topic)  # Include all policy counts
+      select(c(country_iso, selected_topic))  # Include all policy counts
     
     # Get world map data with iso country codes
     country_codes <- read.csv(file = "data/longitude-latitude.csv", header = TRUE, sep = ",", row.names = NULL, stringsAsFactors = FALSE)
@@ -187,7 +190,10 @@ server <- function(input, output, session) {
       
       output$coutrySummary <- renderText({
         # load country summary data
-        country_summary <- read.csv("data/policy_summaries.csv", header = TRUE, sep = ',')
+        country_summary <- read.csv("data/policy_summaries.csv", header = TRUE, sep = ';')
+        make.names(country_summary, unique = TRUE)
+        print(colnames(country_summary))
+        selected_topic <- gsub("_normalized", "", make.names(input$topicSelect))
         # filter for selected country
         country_summary <- country_summary[country_summary$country_iso == country_code, ]
         # filter for selected topic
